@@ -1,14 +1,19 @@
 from flask import Blueprint, request, jsonify, send_from_directory
+import os
 import uuid
 from pathlib import Path
 
 bp = Blueprint('upload', __name__)
 
 UPLOAD_FOLDER = Path("/var/lib/sweetbot/uploads")
-
+UPLOAD_TOKEN = os.getenv('UPLOAD_TOKEN')
 
 @bp.route('/upload', methods=['POST'])
 def upload():
+    token = request.headers.get('Authorization')
+    if token != f"Bearer {UPLOAD_TOKEN}":
+        return jsonify(error="Unauthorized"), 401
+
     if "file" not in request.files:
         return jsonify(error="Missing file field"), 400
 
