@@ -34,6 +34,8 @@ def upload():
     created = not destination.exists()
     if created:
         destination.write_bytes(data)
+    else:
+        destination.touch()
 
     return jsonify(success=True, sha256=sha256, size=len(data)), 201 if created else 200
 
