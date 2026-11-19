@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_from_directory
+import hashlib
 import os
-import uuid
 from pathlib import Path
 
 bp = Blueprint('upload', __name__)
@@ -25,23 +25,30 @@ def upload():
 
     file.seek(0)
 
-    # Generate a unique filename to avoid collisions
-    filename = f"{uuid.uuid4().hex}.png"
+    # Name the file after its content hash, so identical uploads share a single file
+    digest = hashlib.sha256()
+    while chunk := file.read(65536):
+        digest.update(chunk)
+    file.seek(0)
+
+    filename = f"{digest.hexdigest()}.png"
     destination = UPLOAD_FOLDER / filename
 
-    file.save(destination)
+    created = not destination.exists()
+    if created:
+        file.save(destination)
 
     return jsonify(
         success=True,
-        filename=filename,
+        sha256=digest.hexdigest(),
         size=destination.stat().st_size
-    ), 201
+    ), 201 if created else 200
 
-@bp.route("/upload/<uuid>", methods=["GET"])
-def get_upload(uuid):
+@bp.route("/upload/<file_hash>", methods=["GET"])
+def get_upload(file_hash):
 
     return send_from_directory(
         UPLOAD_FOLDER,
-        f"{uuid}.png",
+        f"{file_hash}.png",
         mimetype="image/png"
     )
