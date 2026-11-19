@@ -1,4 +1,4 @@
-#!/home/sweetbot/venv/bin/python3
+#!/opt/sweetbot/venv/bin/python3
 
 from flask import Flask, request
 import json
