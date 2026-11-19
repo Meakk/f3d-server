@@ -5,7 +5,7 @@ from pathlib import Path
 
 bp = Blueprint('upload', __name__)
 
-UPLOAD_FOLDER = Path("/var/lib/sweetbot/uploads")
+UPLOAD_FOLDER = Path(os.getenv('UPLOAD_FOLDER'))
 UPLOAD_TOKEN = os.getenv('UPLOAD_TOKEN')
 
 @bp.route('/upload', methods=['POST'])
