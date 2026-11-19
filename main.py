@@ -1,6 +1,8 @@
 #!/opt/sweetbot/venv/bin/python3
 
 from flask import Flask, request
+import hashlib
+import hmac
 import json
 import os
 from mattermostdriver import Driver
@@ -24,18 +26,22 @@ mat.posts.create_post(options={
 
 @app.route('/github', methods=['POST'])
 def github():
-    data = request.json
-    event = request.headers.get('X-GitHub-Event')
-    token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    if token != os.getenv('MATTERMOST_GITHUB_TOKEN'):
+    secret = os.getenv('MATTERMOST_GITHUB_TOKEN', '')
+    expected = 'sha256=' + hmac.new(secret.encode(), request.get_data(), hashlib.sha256).hexdigest()
+    signature = request.headers.get('X-Hub-Signature-256', '')
+    if not secret or not hmac.compare_digest(signature, expected):
+        print('Invalid or missing X-Hub-Signature-256', flush=True)
         return '', 403
+
+    data = request.get_json()
+    event = request.headers.get('X-GitHub-Event')
 
     action = str(data.get("action"))
     username = '[' + str(data.get("sender").get("login")) + '](' + str(data.get("sender").get("html_url")) + ')'
     repo = data.get("repository").get("name")
 
     if event is not None:
-        print(event + ' (' + action + ') from ' + str(data.get("sender").get("login")))
+        print(event + ' (' + action + ') from ' + str(data.get("sender").get("login")), flush=True)
 
     if event == 'star' and action == 'created' and repo == 'f3d':
         count = data.get("repository").get("stargazers_count")
