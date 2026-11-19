@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 import uuid
 from pathlib import Path
 
@@ -31,3 +31,12 @@ def upload():
         filename=filename,
         size=destination.stat().st_size
     ), 201
+
+@bp.route("/upload/<uuid>", methods=["GET"])
+def get_upload(uuid):
+
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        f"{uuid}.png",
+        mimetype="image/png"
+    )
