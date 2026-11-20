@@ -40,4 +40,4 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh ${{ secrets.SSH_HOST }} /opt/sweetbot/deploy.sh "$SHA"
+          ssh -vvv ${{ secrets.SSH_HOST }} /opt/sweetbot/deploy.sh "$SHA"
