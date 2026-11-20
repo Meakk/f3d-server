@@ -1,0 +1,43 @@
+name: Deploy
+
+# Automatically deploy on push to main branch
+# Also allows manual deployment via workflow dispatch to explicitly revert a specific commit
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to deploy'
+        required: true
+        default: 'origin/main'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Get SHA for workflow dispatch events
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: echo "SHA=${{ github.event.inputs.sha }}" >> $GITHUB_ENV
+
+      - name: Get SHA for push events
+        if: ${{ github.event_name == 'push' }}
+        run: echo "SHA=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.SSH_HOST }} /opt/sweetbot/deploy.sh "$SHA"
