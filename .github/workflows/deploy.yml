@@ -29,7 +29,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod -R 600 ~/.ssh
+          sudo chmod -R 600 ~/.ssh
 
       - name: Get SHA for workflow dispatch events
         if: ${{ github.event_name == 'workflow_dispatch' }}
